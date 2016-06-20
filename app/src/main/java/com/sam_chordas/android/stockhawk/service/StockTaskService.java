@@ -67,7 +67,7 @@ public class StockTaskService extends GcmTaskService{
       initQueryCursor = mContext.getContentResolver().query(QuoteProvider.Quotes.CONTENT_URI,
           new String[] { "Distinct " + QuoteColumns.SYMBOL }, null,
           null, null);
-      if (initQueryCursor.getCount() == 0 || initQueryCursor == null){
+      if (initQueryCursor == null ||initQueryCursor.getCount() == 0){
         // Init task. Populates DB with quotes for the symbols seen below
         try {
           urlStringBuilder.append(

@@ -21,4 +21,11 @@
     <item name="android:textAllCaps">true</item>
   </style>
 
+  <style name="WidgetSymbolTextStyle">
+    <item name="android:textStyle">bold</item>
+    <item name="android:textSize">25sp</item>
+    <item name="android:textAllCaps">true</item>
+    <item name="android:textColor">@color/primary_dark</item>
+  </style>
+
 </resources>

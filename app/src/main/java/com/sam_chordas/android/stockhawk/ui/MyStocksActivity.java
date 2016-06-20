@@ -19,6 +19,7 @@ import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Switch;
 import android.widget.Toast;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.sam_chordas.android.stockhawk.R;
@@ -48,10 +49,12 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
   private Intent mServiceIntent;
   private ItemTouchHelper mItemTouchHelper;
   private static final int CURSOR_LOADER_ID = 0;
+  private static final int FAB_CURSOR_ID=1;
   private QuoteCursorAdapter mCursorAdapter;
   private Context mContext;
   private Cursor mCursor;
   boolean isConnected;
+  private String addQuoteSymbol;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -77,6 +80,7 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
       }
     }
     RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+    assert recyclerView!=null;
     recyclerView.setLayoutManager(new LinearLayoutManager(this));
     getLoaderManager().initLoader(CURSOR_LOADER_ID, null, this);
 
@@ -85,6 +89,13 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
             new RecyclerViewItemClickListener.OnItemClickListener() {
               @Override public void onItemClick(View v, int position) {
                 //TODO:
+                mCursor.moveToPosition(position);
+                int dateColumnIndex = mCursor.getColumnIndex(QuoteColumns.SYMBOL);
+                String symbol = mCursor.getString(dateColumnIndex);
+//                Intent myIntent = new Intent(mContext, DetailActivity.class);
+                Intent myIntent = new Intent(mContext, StockDetailActivity.class);
+                myIntent.putExtra("symbol",symbol);
+                mContext.startActivity(myIntent);
                 // do something on item click
               }
             }));
@@ -92,6 +103,7 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
 
 
     FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+    assert fab!=null;
     fab.attachToRecyclerView(recyclerView);
     fab.setOnClickListener(new View.OnClickListener() {
       @Override public void onClick(View v) {
@@ -101,24 +113,27 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
               .inputType(InputType.TYPE_CLASS_TEXT)
               .input(R.string.input_hint, R.string.input_prefill, new MaterialDialog.InputCallback() {
                 @Override public void onInput(MaterialDialog dialog, CharSequence input) {
+                  addQuoteSymbol=input.toString();
+                  getLoaderManager().initLoader(FAB_CURSOR_ID, null, MyStocksActivity.this);
+
                   // On FAB click, receive user input. Make sure the stock doesn't already exist
                   // in the DB and proceed accordingly
-                  Cursor c = getContentResolver().query(QuoteProvider.Quotes.CONTENT_URI,
-                      new String[] { QuoteColumns.SYMBOL }, QuoteColumns.SYMBOL + "= ?",
-                      new String[] { input.toString() }, null);
-                  if (c.getCount() != 0) {
-                    Toast toast =
-                        Toast.makeText(MyStocksActivity.this, "This stock is already saved!",
-                            Toast.LENGTH_LONG);
-                    toast.setGravity(Gravity.CENTER, Gravity.CENTER, 0);
-                    toast.show();
-                    return;
-                  } else {
-                    // Add the stock to DB
-                    mServiceIntent.putExtra("tag", "add");
-                    mServiceIntent.putExtra("symbol", input.toString());
-                    startService(mServiceIntent);
-                  }
+//                  Cursor c = getContentResolver().query(QuoteProvider.Quotes.CONTENT_URI,
+//                      new String[] { QuoteColumns.SYMBOL }, QuoteColumns.SYMBOL + "= ?",
+//                      new String[] { input.toString() }, null);
+//                  if (c.getCount() != 0) {
+//                    Toast toast =
+//                        Toast.makeText(MyStocksActivity.this, "This stock is already saved!",
+//                            Toast.LENGTH_LONG);
+//                    toast.setGravity(Gravity.CENTER, Gravity.CENTER, 0);
+//                    toast.show();
+//                    return;
+//                  } else {
+//                    // Add the stock to DB
+//                    mServiceIntent.putExtra("tag", "add");
+//                    mServiceIntent.putExtra("symbol", input.toString());
+//                    startService(mServiceIntent);
+//                  }
                 }
               })
               .show();
@@ -168,6 +183,7 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
 
   public void restoreActionBar() {
     ActionBar actionBar = getSupportActionBar();
+    assert actionBar!=null;
     actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
     actionBar.setDisplayShowTitleEnabled(true);
     actionBar.setTitle(mTitle);
@@ -204,18 +220,54 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
   @Override
   public Loader<Cursor> onCreateLoader(int id, Bundle args){
     // This narrows the return to only the stocks that are most current.
-    return new CursorLoader(this, QuoteProvider.Quotes.CONTENT_URI,
-        new String[]{ QuoteColumns._ID, QuoteColumns.SYMBOL, QuoteColumns.BIDPRICE,
-            QuoteColumns.PERCENT_CHANGE, QuoteColumns.CHANGE, QuoteColumns.ISUP},
-        QuoteColumns.ISCURRENT + " = ?",
-        new String[]{"1"},
-        null);
+    switch (id){
+      case CURSOR_LOADER_ID:
+        return new CursorLoader(this, QuoteProvider.Quotes.CONTENT_URI,
+                new String[]{ QuoteColumns._ID, QuoteColumns.SYMBOL, QuoteColumns.BIDPRICE,
+                        QuoteColumns.PERCENT_CHANGE, QuoteColumns.CHANGE, QuoteColumns.ISUP},
+                QuoteColumns.ISCURRENT + " = ?",
+                new String[]{"1"},
+                null);
+      case FAB_CURSOR_ID:
+       return new CursorLoader(this,QuoteProvider.Quotes.CONTENT_URI,
+                new String[] { QuoteColumns.SYMBOL }, QuoteColumns.SYMBOL + "= ?",
+                new String[] { addQuoteSymbol }, null);
+        default:
+          return null;
+
+    }
+
   }
 
   @Override
   public void onLoadFinished(Loader<Cursor> loader, Cursor data){
-    mCursorAdapter.swapCursor(data);
-    mCursor = data;
+
+    int id=loader.getId();
+    switch (id){
+      case CURSOR_LOADER_ID:
+        mCursorAdapter.swapCursor(data);
+        mCursor = data;
+        break;
+      case FAB_CURSOR_ID:
+        if (data.getCount() != 0) {
+          Toast toast =
+                  Toast.makeText(MyStocksActivity.this, "This stock is already saved!",
+                          Toast.LENGTH_LONG);
+          toast.setGravity(Gravity.CENTER, Gravity.CENTER, 0);
+          toast.show();
+          return;
+        } else {
+          // Add the stock to DB
+          if (addQuoteSymbol!=null) {
+            mServiceIntent.putExtra("tag", "add");
+            mServiceIntent.putExtra("symbol", addQuoteSymbol);
+            startService(mServiceIntent);
+          }
+        }
+        data.close();
+        break;
+    }
+
   }
 
   @Override
