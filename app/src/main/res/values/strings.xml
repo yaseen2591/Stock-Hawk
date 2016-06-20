@@ -13,6 +13,7 @@
     <string name="title_activity_stock_detail">StockDetailActivity</string>
     <string name="widget_title">Today\'s Market</string>
     <string name="empty_list">Empty list</string>
+    <string name="add_new_stock">Add new Stock symbol</string>
 
 
     <string name="invalid_symbol">Invalid stock key</string>
