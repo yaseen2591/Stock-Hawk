@@ -6,7 +6,9 @@
     android:gravity="center_vertical"
     android:orientation="horizontal"
     android:paddingLeft="@dimen/list_item_padding_left"
-    android:paddingRight="@dimen/list_item_padding_right">
+    android:paddingRight="@dimen/list_item_padding_right"
+    android:paddingStart="@dimen/list_item_padding_left"
+    android:paddingEnd="@dimen/list_item_padding_right">
 
     <TextView
         android:id="@+id/stock_symbol"
