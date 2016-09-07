@@ -3,6 +3,7 @@ package com.sam_chordas.android.stockhawk.widget;
 import android.annotation.TargetApi;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.Build;
@@ -101,6 +102,8 @@ public class DetailWidgetRemoteViewService extends RemoteViewsService {
                 views.setTextViewText(R.id.stock_symbol, data.getString(INDEX_QUOTE_SYMBOL));
                 views.setTextViewText(R.id.bid_price, data.getString(INDEX_QUOTE_BIDPRICE));
                 views.setTextViewText(R.id.change, data.getString(INDEX_QUOTE_PERCENT_CHANGE));
+
+
 
                 final Intent fillInIntent = new Intent();
 
